@@ -26,10 +26,8 @@ class ExpressionParser
             return new Not($this->parse(...$tokens));
         }
         if ($this->isOperator($token)) {
-            $firstExpressionTokens = $this->getNextExpressionTokens(...$tokens);
-            $secondExpressionTokens = $this->getNextExpressionTokens(...array_slice($tokens, count($firstExpressionTokens)));
-            
-            return new Operator($token, $this->parse(...$firstExpressionTokens), $this->parse(...$secondExpressionTokens));
+            [$firstOperandTokens, $secondOperandTokens] = $this->getNextTwoExpressionsTokensTuple($tokens);
+            return new Operator($token, $this->parse(...$firstOperandTokens), $this->parse(...$secondOperandTokens));
         }
         throw new BooleanExpressionErrorException(sprintf('Syntax error: invalid token: %s', $token));
     }
@@ -46,15 +44,25 @@ class ExpressionParser
             return array_merge([$token], $this->getNextExpressionTokens(...$tokens));
         }
         if ($this->isOperator($token)) {
-            return [$token];
+            [$firstOperandTokens, $secondOperandTokens] = $this->getNextTwoExpressionsTokensTuple($tokens);
+            return array_merge([$token], $firstOperandTokens, $secondOperandTokens);
         }
         return [];
+    }
+    
+    private function getNextTwoExpressionsTokensTuple(array $tokens): array
+    {
+        $firstOperandTokens = $this->getNextExpressionTokens(...$tokens);
+        $secondOperandTokens = $this->getNextExpressionTokens(...array_slice($tokens, count($firstOperandTokens)));
+        return [$firstOperandTokens, $secondOperandTokens];
     }
 
     private function findGroupEnd(array $tokens)
     {
-        foreach ($tokens as $i => $token) {
-            if ($this->isGroupEnd($token)) return $i;
+        for ($size = count($tokens), $i = 0, $stack = 1; $i < $size; $i++) {
+            $stack += (int) $this->isGroupStart($tokens[$i]);
+            $stack -= (int) $this->isGroupEnd($tokens[$i]);
+            if (0 === $stack) return $i;
         }
         throw new UnbalancedGroupException('The expression contains an unbalanced opening parenthesis.');
     }

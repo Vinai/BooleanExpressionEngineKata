@@ -8,20 +8,53 @@ use PHPUnit\Framework\TestCase;
 
 class BooleanExpressionEngineTest extends TestCase
 {
-    public function testSingleBoolean()
+    /**
+     * @dataProvider expressionProvider
+     */
+    public function testEvaluatesBooleanExpression(string $expression, bool $expected)
     {
-        $this->assertFalse((new BooleanExpressionEngine())->evaluate('0'));
-        $this->assertTrue((new BooleanExpressionEngine())->evaluate('1'));
+        $message = sprintf('%s is not %s', $expression, ($expected ? 'true' : 'false'));
+        $this->assertSame($expected, (new BooleanExpressionEngine())->evaluate($expression), $message);
     }
 
-    public function testSingleBooleanGroup()
+    public function expressionProvider(): array
     {
-        $this->assertTrue((new BooleanExpressionEngine())->evaluate('(1)'));
-        $this->assertFalse((new BooleanExpressionEngine())->evaluate('(0)'));
-    }
-
-    public function testCombinedExpression()
-    {
-        $this->assertTrue((new BooleanExpressionEngine())->evaluate('(0&1)|1'));
+        return [
+            ['0', false],
+            ['1', true],
+            ['(0)', false],
+            ['(1)', true],
+            ['1&1', true],
+            ['1&1&0', false],
+            ['1&1&1', true],
+            ['0&0', false],
+            ['0&1', false],
+            ['0|0', false],
+            ['0|1', true],
+            ['1|1', true],
+            ['!1', false],
+            ['!0', true],
+            ['!(1)', false],
+            ['(!1)', false],
+            ['!(0)', true],
+            ['(!0)', true],
+            ['!(!0)', false],
+            ['!!(!0)', true],
+            ['!!(!!0)', false],
+            ['(0&1)|1', true],
+            ['(0&1)|0', false],
+            ['(0&1)|0|1', true],
+            ['!(0&1)|0', true],
+            ['(1|0)&1', true],
+            ['(1|0)&0', false],
+            ['(1|0)&!1', false],
+            ['((1))', true],
+            ['!((1))', false],
+            ['(1&1)&(0|1)', true],
+            ['(1&1)&(0|(1&1))', true],
+            ['0|((1|1)&1))', true],
+            ['(1&1)&(0|((1|1)&1))', true],
+            ['(1&(1|0))&(0|(1)|(0|1)&((1)))', true],
+        ];
     }
 }
