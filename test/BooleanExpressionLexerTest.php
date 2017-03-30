@@ -20,10 +20,13 @@ class BooleanExpressionLexerTest extends TestCase
     public function lexerExamplesProvider(): array
     {
         return [
-            'single operator' => ['1', ['1']],
-            'simple group' => ['(1)', ['(', '1', ')']],
-            'single op + space' => [' 1', ['1']],
+            'single operator'              => ['1', ['1']],
+            'simple group'                 => ['(1)', ['(', '1', ')']],
+            'single op + space'            => [' 1', ['1']],
             'expression group with spaces' => ['( 1 & 0 ) | !1 ', ['(', '1', '&', '0', ')', '|', '!', '1']],
+            'expression with variable'     => ['foo', ['foo']],
+            'grouped variable'             => ['(bar)', ['(', 'bar', ')']],
+            'variable operation'           => ['!foo|(1&bar)', ['!', 'foo', '|', '(', '1', '&', 'bar', ')']],
         ];
     }
 
@@ -40,6 +43,6 @@ class BooleanExpressionLexerTest extends TestCase
 
     public function emptySourceProvider(): array
     {
-        return [ [''], [' '], ["\n"]];
+        return [[''], [' '], ["\n"]];
     }
 }

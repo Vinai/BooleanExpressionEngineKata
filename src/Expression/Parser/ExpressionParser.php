@@ -57,7 +57,7 @@ class ExpressionParser
         return [$firstOperandTokens, $secondOperandTokens];
     }
 
-    private function findGroupEnd(array $tokens)
+    private function findGroupEnd(array $tokens): int
     {
         for ($size = count($tokens), $i = 0, $stack = 1; $i < $size; $i++) {
             $stack += (int) $this->isGroupStart($tokens[$i]);
@@ -74,17 +74,17 @@ class ExpressionParser
 
     private function isGroupStart(string $token): bool
     {
-        return '(' === $token;
+        return Group::START === $token;
     }
 
     private function isGroupEnd(string $token): bool
     {
-        return ')' === $token;
+        return Group::END === $token;
     }
 
     private function isNot(string $token): bool
     {
-        return '!' === $token;
+        return Not::NOT === $token;
     }
 
     private function isOperator(string $token): bool

@@ -8,6 +8,9 @@ use BooleanExpressionEngine\Expression;
 
 class Group implements Expression
 {
+    const START = '(';
+    const END = ')';
+    
     /**
      * @var Expression
      */

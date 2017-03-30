@@ -8,6 +8,8 @@ use BooleanExpressionEngine\Expression;
 
 class Not implements Expression
 {
+    const NOT = '!';
+    
     /**
      * @var Expression
      */

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace BooleanExpressionEngine;
 
 use BooleanExpressionEngine\Expression\Parser\ExpressionParser;
-use BooleanExpressionEngine\Expression\Parser\InfixNotationPreprocessor;
+use BooleanExpressionEngine\Expression\Parser\InfixToPrefixNotationPreprocessor;
+use BooleanExpressionEngine\Expression\Parser\TokenStreamPreprocessor;
+use BooleanExpressionEngine\Expression\Parser\VariablePreprocessor;
 
 /**
  * expression ::= bool | group | operation | not
@@ -14,26 +16,37 @@ use BooleanExpressionEngine\Expression\Parser\InfixNotationPreprocessor;
  * operation  ::= operator | operator expression | expression operator expression
  * operator   ::= '&' | '|'
  * not        ::= '!' expression
- * 
- * transitions:
- * 
- * identity -> bool | group | operator | not
- * 
- * bool       -> operator
- * not        -> bool | not | operator | group
- * group      -> bool | not | operator 
- * operator   -> bool | not | group
  */
 class BooleanExpressionEngine
 {
-    public function evaluate(string $expression)
+    public function evaluate(string $expression): bool
+    {
+        return $this->createAst($expression)->evaluate();
+    }
+
+    public function evaluateWithVariables(string $expression, array $variables): bool
+    {
+        return $this->createAst($expression, $variables)->evaluate();
+    }
+
+    private function createAst(string $expression, array $variables = []): Expression
     {
         $lexer = new BooleanExpressionLexer();
-        $preprocessor = new InfixNotationPreprocessor();
         $parser = new ExpressionParser();
-        
-        $tokens = $preprocessor->transformIntoPrefixNotation($lexer->tokenize($expression));
-        $ast = $parser->parse(...$tokens);
-        return $ast->evaluate();
+        $preprocessors = $this->getPreprocessors($variables);
+
+        return $parser->parse(...$this->applyPreProcessors($lexer->tokenize($expression), ...$preprocessors));
+    }
+
+    private function applyPreProcessors(array $tokens, TokenStreamPreprocessor ...$preprocessors): array
+    {
+        return array_reduce($preprocessors, function (array $tokens, TokenStreamPreprocessor $preprocessor) {
+            return $preprocessor->process($tokens);
+        }, $tokens);
+    }
+
+    private function getPreprocessors(array $variables): array
+    {
+        return [new InfixToPrefixNotationPreprocessor(), new VariablePreprocessor($variables)];
     }
 }

@@ -17,6 +17,17 @@ class BooleanExpressionEngineTest extends TestCase
         $this->assertSame($expected, (new BooleanExpressionEngine())->evaluate($expression), $message);
     }
 
+    /**
+     * @dataProvider expressionProvider
+     */
+    public function testEvaluatesExpressionWithVariables(string $expression, bool $expected)
+    {
+        $expressionWithVariables = str_replace(['0', '1'], ['foo', 'bar'], $expression);
+        $message = sprintf('%s is not %s', $expressionWithVariables, ($expected ? 'true' : 'false'));
+        $this->assertSame($expected, (new BooleanExpressionEngine())
+            ->evaluateWithVariables($expression, ['foo' => false, 'bar' => true]), $message);
+    }
+
     public function expressionProvider(): array
     {
         return [

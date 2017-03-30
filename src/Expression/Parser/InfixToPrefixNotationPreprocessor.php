@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace BooleanExpressionEngine\Expression\Parser;
 
+use BooleanExpressionEngine\Expression\Group;
 use BooleanExpressionEngine\Expression\Operator;
 
-class InfixNotationPreprocessor
+class InfixToPrefixNotationPreprocessor implements TokenStreamPreprocessor
 {
-    public function transformIntoPrefixNotation(array $tokens): array
+    public function process(array $tokens): array
     {
         for ($i = 0, $size = count($tokens); $i < $size; $i++) {
             if ($this->isOperator($tokens[$i])) {
@@ -18,22 +19,22 @@ class InfixNotationPreprocessor
         return $tokens;
     }
 
-    private function isOperator(string $token)
+    private function isOperator(string $token): bool
     {
         return in_array($token, [Operator::OR, Operator::AND], true);
     }
     
     private function isGroupEnd(int $i, array $tokens): bool
     {
-        return ')' === $tokens[$i];
+        return Group::END === $tokens[$i];
     }
 
     private function isGroupStart(int $i, array $tokens): bool
     {
-        return '(' === $tokens[$i];
+        return Group::START === $tokens[$i];
     }
 
-    private function findExpressionStart(int $i, array $tokens)
+    private function findExpressionStart(int $i, array $tokens): int
     {
         if ($i === 0) {
             return $i;
